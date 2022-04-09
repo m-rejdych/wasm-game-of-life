@@ -11,6 +11,7 @@ const width = universe.width();
 const height = universe.height();
 
 const canvas = document.getElementById('game-of-life-canvas');
+const playPauseButton = document.getElementById('play-pause');
 canvas.height = (CELL_SIZE + 1) * height + 1;
 canvas.width = (CELL_SIZE + 1) * width + 1;
 
@@ -59,15 +60,54 @@ const drawCells = () => {
   ctx.stroke();
 };
 
+let animationId = null;
+
+const play = () => {
+  playPauseButton.textContent = 'Stop';
+  renderLoop();
+}
+
+const pause = () => {
+  playPauseButton.textContent = 'Play';
+  cancelAnimationFrame(animationId);
+  animationId = null;
+};
+
 const renderLoop = () => {
+  // debugger;
   universe.tick();
 
   drawGrid();
   drawCells();
 
-  requestAnimationFrame(renderLoop);
+  animationId = requestAnimationFrame(renderLoop);
 };
+
+playPauseButton.addEventListener('click', () => {
+  if (animationId === null) {
+    play();
+  } else {
+    pause();
+  }
+});
+
+canvas.addEventListener('click', (e) => {
+  const boundingRect = canvas.getBoundingClientRect(); 
+
+  const scaleX = canvas.width / boundingRect.width;
+  const scaleY = canvas.height / boundingRect.height;
+
+  const canvasLeft = (e.clientX - boundingRect.left) * scaleX;
+  const canvasTop = (e.clientY - boundingRect.top) * scaleY;
+  const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+  const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+
+  universe.toggle_cell(row, col);
+
+  drawGrid();
+  drawCells();
+});
 
 drawGrid();
 drawCells();
-requestAnimationFrame(renderLoop);
+play();
